@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <style>
+    @page { size: A4; margin: 18mm; }
+    body { font-family: DejaVu Sans, Arial, sans-serif; color: #1f2937; font-size: 12px; }
+    .header { display: flex; justify-content: space-between; border-bottom: 3px solid #2563eb; padding-bottom: 14px; }
+    h1 { color: #1d4ed8; margin: 0 0 5px; font-size: 25px; }
+    .number { text-align: right; }
+    .number strong { color: #1d4ed8; font-size: 16px; }
+    .customer { background: #eff6ff; border-radius: 6px; padding: 12px; margin: 18px 0; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #1d4ed8; color: white; text-align: left; padding: 8px; }
+    td { border-bottom: 1px solid #d1d5db; padding: 9px 8px; }
+    td.num, th.num { text-align: right; }
+    .totals { width: 260px; margin-left: auto; margin-top: 18px; }
+    .totals td { border: 0; }
+    .total { font-size: 18px; color: #1d4ed8; font-weight: bold; }
+    .footer { margin-top: 35px; text-align: center; color: #6b7280; font-size: 10px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>{{ commerce_name }}</h1>
+      {% if commerce_address %}<div>{{ commerce_address }}</div>{% endif %}
+      {% if commerce_phone %}<div>{{ commerce_phone }}</div>{% endif %}
+    </div>
+    <div class="number">
+      <strong>{{ quote.quote_number }}</strong><br>
+      Fecha: {{ quote.created_at.strftime('%d/%m/%Y') }}<br>
+      Válido hasta: {{ quote.valid_until.strftime('%d/%m/%Y') }}
+    </div>
+  </div>
+  <div class="customer">
+    <strong>Cliente:</strong> {{ quote.customer_name or 'Consumidor final' }}<br>
+    {% if quote.customer_phone %}<strong>Teléfono:</strong> {{ quote.customer_phone }}{% endif %}
+  </div>
+  <table>
+    <thead>
+      <tr><th>Descripción</th><th>Unidad</th><th class="num">Cantidad</th><th class="num">Precio unitario</th><th class="num">Subtotal</th></tr>
+    </thead>
+    <tbody>
+      {% for item in items %}
+      <tr>
+        <td>{{ item.description }}</td>
+        <td>{{ item.unit }}</td>
+        <td class="num">{{ "%.2f"|format(item.quantity) }}</td>
+        <td class="num">${{ "%.2f"|format(item.unit_price) }}</td>
+        <td class="num">${{ "%.2f"|format(item.subtotal) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <table class="totals">
+    <tr><td>Subtotal</td><td class="num">${{ "%.2f"|format(quote.subtotal) }}</td></tr>
+    <tr><td>Descuento ({{ "%.2f"|format(quote.discount_pct) }}%)</td><td class="num">${{ "%.2f"|format(quote.subtotal - quote.total) }}</td></tr>
+    <tr class="total"><td>TOTAL</td><td class="num">${{ "%.2f"|format(quote.total) }}</td></tr>
+  </table>
+  <div class="footer">Presupuesto válido por 7 días. Los precios pueden estar sujetos a disponibilidad de stock.</div>
+</body>
+</html>

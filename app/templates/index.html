@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cotizador</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-50 text-sm text-slate-900 antialiased">
+  <header class="border-b border-slate-200 bg-white">
+    <div class="mx-auto flex h-14 max-w-screen-2xl items-center justify-between gap-4 px-4">
+      <h1 class="shrink-0 text-sm font-semibold tracking-tight">
+        <span class="rounded-sm bg-black px-2.5 py-1.5 text-white">Cotizador</span>
+      </h1>
+      <nav class="flex min-w-0 flex-1 items-center justify-end gap-1 overflow-x-auto sm:justify-start sm:pl-8" aria-label="Navegación principal">
+        <button class="tab-button flex-1 whitespace-nowrap rounded-md bg-slate-100 px-3 py-2 font-medium text-slate-900 sm:flex-none" data-tab="new">Nuevo presupuesto</button>
+        <button class="tab-button flex-1 whitespace-nowrap rounded-md px-3 py-2 font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-900 sm:flex-none" data-tab="catalog">Catálogo y precios</button>
+        <button class="tab-button flex-1 whitespace-nowrap rounded-md px-3 py-2 font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-900 sm:flex-none" data-tab="history">Historial</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-screen-2xl px-4 py-4">
+    <section id="tab-new" class="tab-panel grid grid-cols-1 items-start gap-4 lg:grid-cols-12 [&:has(#quote-editor.hidden)>div:first-child]:lg:col-span-12">
+      <div class="space-y-3 lg:col-span-4">
+        <div class="rounded-md border border-slate-200 bg-white">
+          <div class="flex h-11 items-center border-b border-slate-200 px-3">
+            <h2 class="font-semibold">Mensaje de WhatsApp</h2>
+          </div>
+          <div class="space-y-3 p-3">
+            <textarea id="message" rows="6" class="w-full resize-y rounded border border-slate-200 bg-white p-2.5 text-sm leading-5 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300" placeholder="Pegá el mensaje del cliente..."></textarea>
+            <div class="space-y-2">
+              <label class="sr-only" for="customer-name">Nombre del cliente</label>
+              <input id="customer-name" class="h-9 w-full rounded border border-slate-200 px-2.5 text-sm placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300" placeholder="Nombre del cliente">
+              <label class="sr-only" for="customer-phone">Teléfono</label>
+              <input id="customer-phone" class="h-9 w-full rounded border border-slate-200 px-2.5 text-sm placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300" placeholder="Teléfono">
+              <div>
+                <label class="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500" for="discount">Descuento (%)</label>
+                <input id="discount" type="number" min="0" max="100" step="0.01" value="0" class="h-9 w-full rounded border border-slate-200 px-2.5 text-right tabular-nums focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300">
+              </div>
+            </div>
+            <button id="parse-btn" type="button" class="h-9 w-full rounded-md bg-slate-900 px-3 font-medium text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-1">Analizar y crear presupuesto</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="quote-editor" class="hidden rounded-md border border-slate-200 bg-white lg:col-span-8 [&_.bg-yellow-50]:!bg-amber-50/80 [&_.item-description]:!h-9 [&_.item-price]:!h-9 [&_.item-price]:!text-right [&_.item-price]:!tabular-nums [&_.item-quantity]:!h-9 [&_.item-quantity]:!text-right [&_.item-quantity]:!tabular-nums [&_.item-unit]:!h-9 [&_.product-select]:!h-9">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
+          <div class="min-w-0">
+            <p class="text-xs font-medium uppercase tracking-wider text-slate-500">Presupuesto</p>
+            <h2 id="quote-number" class="mt-0.5 font-semibold tabular-nums"></h2>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="hidden rounded border border-amber-200 bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800 sm:inline-flex">Fila ámbar: revisar</span>
+            <div class="text-right">
+              <p class="text-xs font-medium uppercase tracking-wider text-slate-500">Total</p>
+              <p id="quote-total" class="text-lg font-semibold tabular-nums">$0.00</p>
+            </div>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-[760px] border-collapse text-sm">
+            <thead>
+              <tr class="h-9 border-b border-slate-200 bg-slate-50 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
+                <th class="px-3 py-2">Producto</th>
+                <th class="px-3 py-2">Descripción</th>
+                <th class="px-3 py-2 text-right">Cant.</th>
+                <th class="px-3 py-2">Unidad</th>
+                <th class="px-3 py-2 text-right">Precio unit.</th>
+                <th class="px-3 py-2"></th>
+              </tr>
+            </thead>
+            <tbody id="items-body" class="divide-y divide-slate-100 [&_td]:px-3 [&_td]:py-2"></tbody>
+          </table>
+        </div>
+        <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 px-4 py-3">
+          <button id="add-item" type="button" class="inline-flex h-8 items-center gap-1.5 rounded border border-slate-300 bg-white px-2.5 font-medium text-slate-700 hover:bg-slate-50">
+            <svg class="h-4 w-4" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M8 3.25v9.5M3.25 8h9.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+            </svg>
+            Agregar ítem
+          </button>
+          <div class="flex flex-wrap items-center gap-2">
+            <button id="copy-whatsapp" type="button" class="inline-flex h-9 items-center gap-2 rounded-md border border-slate-300 bg-white px-3 font-medium text-slate-700 hover:bg-slate-50">
+              <svg class="h-4 w-4" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <rect x="5.25" y="5.25" width="7.5" height="8" rx="1" stroke="currentColor" stroke-width="1.75"/>
+                <path d="M10.75 5V3.75a1 1 0 0 0-1-1h-5a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1H5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+              </svg>
+              Copiar para WhatsApp
+            </button>
+            <button id="download-pdf" type="button" class="inline-flex h-9 items-center gap-2 rounded-md bg-blue-700 px-3 font-medium text-white hover:bg-blue-800">
+              <svg class="h-4 w-4" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M8 2.5v7m0 0 2.75-2.75M8 9.5 5.25 6.75M3 10.5v2a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-2" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Descargar PDF
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-catalog" class="tab-panel hidden">
+      <div class="grid items-start gap-4 lg:grid-cols-12">
+        <div class="rounded-md border border-slate-200 bg-white lg:col-span-8">
+          <div class="border-b border-slate-200 p-3">
+            <label class="relative block">
+              <span class="sr-only">Buscar productos</span>
+              <svg class="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <circle cx="7" cy="7" r="4.25" stroke="currentColor" stroke-width="1.75"/>
+                <path d="m10.25 10.25 3 3" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+              </svg>
+              <input id="product-search" class="h-9 w-full rounded border border-slate-200 pl-8 pr-3 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300" placeholder="Buscar por nombre, SKU o alias">
+            </label>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full min-w-[640px] text-sm [&_tbody_td:nth-child(3)]:text-right [&_tbody_td:nth-child(3)]:tabular-nums [&_tbody_td:nth-child(4)]:text-right [&_tbody_td:nth-child(4)]:tabular-nums">
+              <thead>
+                <tr class="h-9 border-b border-slate-200 bg-slate-50 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
+                  <th class="px-3 py-2">SKU</th>
+                  <th class="px-3 py-2">Producto</th>
+                  <th class="px-3 py-2 text-right">Precio</th>
+                  <th class="px-3 py-2 text-right">Stock</th>
+                  <th class="px-3 py-2 text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="products-body" class="divide-y divide-slate-100 [&_td]:px-3 [&_td]:py-2"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="space-y-4 lg:col-span-4">
+          <div class="rounded-md border border-slate-200 bg-white">
+            <h2 id="product-form-title" class="border-b border-slate-200 px-3 py-3 font-semibold">Agregar producto</h2>
+            <form id="product-form" class="space-y-3 p-3">
+              <div class="grid grid-cols-2 gap-2">
+                <label class="col-span-2 space-y-1">
+                  <span class="text-xs font-medium text-slate-600">Nombre</span>
+                  <input id="new-product-name" required maxlength="255" class="h-9 w-full rounded border border-slate-200 px-2.5 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300">
+                </label>
+                <label class="space-y-1">
+                  <span class="text-xs font-medium text-slate-600">SKU</span>
+                  <input id="new-product-sku" required maxlength="100" class="h-9 w-full rounded border border-slate-200 px-2.5 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300">
+                </label>
+                <label class="space-y-1">
+                  <span class="text-xs font-medium text-slate-600">Unidad</span>
+                  <input id="new-product-unit" value="unidad" class="h-9 w-full rounded border border-slate-200 px-2.5 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300">
+                </label>
+                <label class="space-y-1">
+                  <span class="text-xs font-medium text-slate-600">Precio unitario</span>
+                  <input id="new-product-price" type="number" min="0" step="0.01" value="0" required class="h-9 w-full rounded border border-slate-200 px-2.5 text-right tabular-nums focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300">
+                </label>
+                <label class="space-y-1">
+                  <span class="text-xs font-medium text-slate-600">Stock</span>
+                  <input id="new-product-stock" type="number" min="0" step="0.01" value="0" required class="h-9 w-full rounded border border-slate-200 px-2.5 text-right tabular-nums focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300">
+                </label>
+                <label class="col-span-2 space-y-1">
+                  <span class="text-xs font-medium text-slate-600">Alias (separados por coma)</span>
+                  <input id="new-product-aliases" class="h-9 w-full rounded border border-slate-200 px-2.5 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300">
+                </label>
+              </div>
+              <div class="flex gap-2">
+                <button id="save-product-btn" type="submit" class="h-9 flex-1 rounded-md bg-slate-900 px-3 font-medium text-white hover:bg-slate-800">Guardar producto</button>
+                <button id="cancel-product-edit" type="button" class="hidden h-9 rounded-md border border-slate-200 px-3 text-slate-700 hover:bg-slate-50">Cancelar</button>
+              </div>
+            </form>
+          </div>
+          <div class="rounded-md border border-slate-200 bg-white">
+            <h2 class="border-b border-slate-200 px-3 py-3 font-semibold">Importar catálogo</h2>
+            <div class="space-y-3 p-3">
+              <p class="text-xs text-slate-500">Formatos admitidos: Excel (.xlsx) y CSV (.csv).</p>
+              <input id="catalog-file" type="file" accept=".xlsx,.csv" class="block w-full text-sm text-slate-600 file:mr-3 file:h-8 file:rounded file:border-0 file:bg-slate-100 file:px-3 file:text-xs file:font-medium file:text-slate-700 hover:file:bg-slate-200">
+              <label for="replace-all" class="flex items-start gap-2 text-xs leading-5 text-slate-700">
+                <input id="replace-all" name="replace_all" type="checkbox" class="mt-1 h-4 w-4 shrink-0 rounded border-slate-300 text-slate-900 focus:ring-slate-400">
+                <span>Reemplazar catálogo completo (oculta los productos que no estén en este archivo)</span>
+              </label>
+              <button id="import-btn" type="button" class="h-9 w-full rounded-md bg-slate-900 px-3 font-medium text-white hover:bg-slate-800">Importar archivo</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-history" class="tab-panel hidden">
+      <div class="rounded-md border border-slate-200 bg-white">
+        <h2 class="border-b border-slate-200 px-3 py-3 font-semibold">Últimos presupuestos</h2>
+        <div id="history-list" class="space-y-2 p-3 [&>div]:!rounded-md [&>div]:!border-slate-200 [&>div]:!p-3"></div>
+      </div>
+    </section>
+  </main>
+  <div id="toast" class="fixed bottom-4 right-4 hidden rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white"></div>
+  <script src="/static/app.js?v=5"></script>
+</body>
+</html>
